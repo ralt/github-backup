@@ -14,11 +14,14 @@
 (defvar *orgs* (cl-ppcre:split "," (uiop:getenv "ORGS")))
 
 (defun main ()
-  (let ((archive-name (format nil
-                              "github-archive-~A"
-                              (local-time:format-rfc3339-timestring
-                               nil
-                               (local-time:now))))
+  (let ((archive-name (cl-ppcre:regex-replace-all
+                       ":"
+                       (format nil
+                               "github-archive-~A"
+                               (local-time:format-rfc3339-timestring
+                                nil
+                                (local-time:now)))
+                       "-"))
         (repos
          (append
           (get-user-repos)
@@ -31,7 +34,7 @@
                                 (format nil "~A/~A" archive-name (repo-name repo)))))
     (format t "Archiving everything into ~A...~%" (format nil "~A.tar.gz" archive-name))
     (uiop:run-program (format nil
-                              "tar -czf ~A ~A"
+                              "tar -czf ~A -C ~A ."
                               (format nil "~A.tar.gz" archive-name)
                               archive-name))
     (format t "Cleaning up...~%")
