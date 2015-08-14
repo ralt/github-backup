@@ -28,7 +28,7 @@
           (get-orgs-repos *orgs*))))
     (ensure-directories-exist archive-name)
     (dolist (repo repos)
-      (format t "Cloning ~A...~%" (repo-name repo))
+      (format t "Cloning ~A/~A...~%" (repo-owner repo) (repo-name repo))
       (uiop:run-program (format nil "git clone ~A ~A"
                                 (repo-url repo)
                                 (format nil "~A/~A" archive-name (repo-name repo)))))
@@ -69,6 +69,9 @@
 (defun get-org-repos (org)
   (format t "Fetching ~A repositories...~%" org)
   (get-repos (format nil "https://api.github.com/orgs/~A/repos?per_page=100" org)))
+
+(defun repo-owner (repo)
+  (jsown:val (jsown:val repo "owner") "login"))
 
 (defun repo-url (repo)
   (jsown:val repo "ssh_url"))
