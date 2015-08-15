@@ -41,12 +41,18 @@
                                     archive-name))
           (format t "Cleaning up...~%")
           (cl-fad:delete-directory-and-files archive-name)))
+    #+sbcl
+    (sb-sys:interactive-interrupt ()
+      (quit-cleanly))
     (error ()
-      (format t "An error occured. Cleaning up and exiting immediately.~%")
-      (when (and (string= *archive-name* "")
-                 (cl-fad:directory-exists-p *archive-name*))
-        (cl-fad:delete-directory-and-files *archive-name*))
-      (uiop:quit -1))))
+      (quit-cleanly))))
+
+(defun quit-cleanly ()
+  (format t "An error occured. Cleaning up and exiting immediately.~%")
+  (when (and (not (string= *archive-name* ""))
+             (cl-fad:directory-exists-p *archive-name*))
+    (cl-fad:delete-directory-and-files *archive-name*))
+  (uiop:quit -1))
 
 (defun get-repos (url &optional (page 1))
   (format t "~TFetching page ~A...~%" page)
