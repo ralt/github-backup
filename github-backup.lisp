@@ -4,12 +4,13 @@
 
 (in-package #:github-backup)
 
-(defvar *user* (uiop:getenv "USER"))
-(defvar *token* (uiop:getenv "PERSONAL_ACCESS_TOKEN"))
-(defvar *orgs* (cl-ppcre:split "," (uiop:getenv "ORGS")))
+(defvar *token*)
+(defvar *orgs*)
 
 (defun main (&rest args)
   (declare (ignore args))
+  (setf *token* (uiop:getenv "PERSONAL_ACCESS_TOKEN"))
+  (setf *orgs* (cl-ppcre:split "," (uiop:getenv "ORGS")))
   (let ((archive-name (cl-ppcre:regex-replace-all
                        ":"
                        (format nil
