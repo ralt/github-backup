@@ -7,35 +7,46 @@
 (defvar *token*)
 (defvar *orgs*)
 
+(defvar *archive-name* "")
+
 (defun main (&rest args)
   (declare (ignore args))
-  (setf *token* (uiop:getenv "PERSONAL_ACCESS_TOKEN"))
-  (setf *orgs* (cl-ppcre:split "," (uiop:getenv "ORGS")))
-  (let ((archive-name (cl-ppcre:regex-replace-all
-                       ":"
-                       (format nil
-                               "github-archive-~A"
-                               (local-time:format-rfc3339-timestring
-                                nil
-                                (local-time:now)))
-                       "-"))
-        (repos
-         (append
-          (get-user-repos)
-          (get-orgs-repos *orgs*))))
-    (ensure-directories-exist archive-name)
-    (dolist (repo repos)
-      (format t "Cloning ~A/~A...~%" (repo-owner repo) (repo-name repo))
-      (uiop:run-program (format nil "git clone ~A ~A"
-                                (repo-url repo)
-                                (format nil "~A/~A" archive-name (repo-name repo)))))
-    (format t "Archiving everything into ~A...~%" (format nil "~A.tar.gz" archive-name))
-    (uiop:run-program (format nil
-                              "tar -czf ~A -C ~A ."
-                              (format nil "~A.tar.gz" archive-name)
-                              archive-name))
-    (format t "Cleaning up...~%")
-    (cl-fad:delete-directory-and-files archive-name)))
+  (handler-case
+      (progn
+        (setf *token* (uiop:getenv "PERSONAL_ACCESS_TOKEN"))
+        (setf *orgs* (cl-ppcre:split "," (uiop:getenv "ORGS")))
+        (let ((archive-name (cl-ppcre:regex-replace-all
+                             ":"
+                             (format nil
+                                     "github-archive-~A"
+                                     (local-time:format-rfc3339-timestring
+                                      nil
+                                      (local-time:now)))
+                             "-"))
+              (repos
+               (append
+                (get-user-repos)
+                (get-orgs-repos *orgs*))))
+          (ensure-directories-exist archive-name)
+          (setf *archive-name* archive-name)
+          (dolist (repo repos)
+            (format t "Cloning ~A/~A...~%" (repo-owner repo) (repo-name repo))
+            (uiop:run-program (format nil "git clone ~A ~A"
+                                      (repo-url repo)
+                                      (format nil "~A/~A" archive-name (repo-name repo)))))
+          (format t "Archiving everything into ~A...~%" (format nil "~A.tar.gz" archive-name))
+          (uiop:run-program (format nil
+                                    "tar -czf ~A -C ~A ."
+                                    (format nil "~A.tar.gz" archive-name)
+                                    archive-name))
+          (format t "Cleaning up...~%")
+          (cl-fad:delete-directory-and-files archive-name)))
+    (error ()
+      (format t "An error occured. Cleaning up and exiting immediately.~%")
+      (when (and (string= *archive-name* "")
+                 (cl-fad:directory-exists-p *archive-name*))
+        (cl-fad:delete-directory-and-files *archive-name*))
+      (uiop:quit -1))))
 
 (defun get-repos (url &optional (page 1))
   (format t "~TFetching page ~A...~%" page)
