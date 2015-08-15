@@ -13,8 +13,8 @@ the current time in an rfc3339 format.
 
 Dependencies:
 
-- sbcl
-- quicklisp
+- cl-launch
+- cl-quicklisp
 - git
 - tar
 
