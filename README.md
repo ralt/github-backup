@@ -1,6 +1,7 @@
 # github-backup
 
-Backups *all* the Github repositories in a single archive.
+Backups *all* your (and your organizations) Github repositories in a
+single archive.
 
 The name of the archive is `github-archive-%s.tar.gz`, where `%s` is
 the current time in an rfc3339 format.
@@ -19,6 +20,6 @@ Dependencies:
 
 How to run:
 
-    $ USER=foo PERSONAL_ACCESS_TOKEN=bar ORGS=baz,qux ./github-backup
+    $ PERSONAL_ACCESS_TOKEN=bar ORGS=baz,qux ./github-backup
 
 License: MIT.
